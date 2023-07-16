@@ -64,47 +64,6 @@ public class PlayerAPI extends LivingEntityAPI<Player> {
     }
 
     @LuaWhitelist
-    @LuaMethodDoc(
-            overloads = {
-                    @LuaMethodOverload(
-                            argumentTypes = FiguraVec3.class,
-                            argumentNames = "vec"
-                    ),
-                    @LuaMethodOverload(
-                            argumentTypes = {Double.class, Double.class, Double.class},
-                            argumentNames = {"x", "y", "z"}
-                    )
-            },
-            value = "player.setPos"
-    )
-    public void setPos(Object x, Double y, Double z) {
-        FiguraVec3 vec = LuaUtils.parseVec3("player_setPos", x, y, z);
-        checkEntity();
-        entity.setPos(new Vec3(vec.x, vec.y, vec.z));
-    }
-
-    @LuaWhitelist
-    @LuaMethodDoc(
-            overloads = {
-                    @LuaMethodOverload(
-                            argumentTypes = FiguraVec3.class,
-                            argumentNames = "vec"
-                    ),
-                    @LuaMethodOverload(
-                            argumentTypes = {Double.class, Double.class, Double.class},
-                            argumentNames = {"x", "y", "z"}
-                    )
-            },
-            value = "player.setVelocity"
-    )
-    public void setVelocity(Object x, Double y, Double z) {
-        FiguraVec3 vec = LuaUtils.parseVec3("player_setVelocity", x, y, z);
-        checkEntity();
-        entity.setDeltaMovement(new Vec3(vec.x, vec.y, vec.z));
-    }
-
-
-    @LuaWhitelist
     @LuaMethodDoc("player.get_exhaustion")
     public float getExhaustion() {
         checkEntity();
