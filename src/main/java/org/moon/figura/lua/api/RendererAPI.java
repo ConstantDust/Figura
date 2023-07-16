@@ -197,6 +197,23 @@ public class RendererAPI {
     }
 
     @LuaWhitelist
+    @LuaMethodDoc(
+            overloads = {
+                    @LuaMethodOverload,
+                    @LuaMethodOverload(
+                            argumentTypes = Float.class,
+                            argumentNames = "sensitivity"
+                    )
+            },
+            aliases = "sensitivity",
+            value = "renderer.set_sensitivity"
+    )
+    public RendererAPI setSensitivity(Float sensitivity) {
+        Minecraft.getInstance().options.sensitivity().set(Mth.clamp(sensitivity.doubleValue(), 0D, 1D));
+        return this;
+    }
+
+    @LuaWhitelist
     public RendererAPI shadowRadius(Float shadowRadius) {
         return setShadowRadius(shadowRadius);
     }
