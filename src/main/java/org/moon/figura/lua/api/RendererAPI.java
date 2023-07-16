@@ -212,7 +212,10 @@ public class RendererAPI {
         Minecraft.getInstance().options.sensitivity().set(Mth.clamp(sensitivity.doubleValue(), 0D, 1D));
         return this;
     }
-
+    @LuaWhitelist
+    public Double getSensitivity() {
+        return Minecraft.getInstance().options.sensitivity().get();
+    }
     @LuaWhitelist
     public RendererAPI shadowRadius(Float shadowRadius) {
         return setShadowRadius(shadowRadius);
