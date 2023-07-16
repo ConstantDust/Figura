@@ -5,6 +5,7 @@ import net.minecraft.client.resources.DefaultPlayerSkin;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.player.PlayerModelPart;
 import net.minecraft.world.level.GameType;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.scores.PlayerTeam;
 import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaTable;
@@ -15,7 +16,10 @@ import org.moon.figura.lua.ReadOnlyLuaTable;
 import org.moon.figura.lua.docs.LuaMethodDoc;
 import org.moon.figura.lua.docs.LuaMethodOverload;
 import org.moon.figura.lua.docs.LuaTypeDoc;
+import org.moon.figura.math.vector.FiguraVec3;
+import org.moon.figura.utils.ColorUtils;
 import org.moon.figura.utils.EntityUtils;
+import org.moon.figura.utils.LuaUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -58,6 +62,47 @@ public class PlayerAPI extends LivingEntityAPI<Player> {
         checkEntity();
         return entity.getFoodData().getSaturationLevel();
     }
+
+    @LuaWhitelist
+    @LuaMethodDoc(
+            overloads = {
+                    @LuaMethodOverload(
+                            argumentTypes = FiguraVec3.class,
+                            argumentNames = "vec"
+                    ),
+                    @LuaMethodOverload(
+                            argumentTypes = {Double.class, Double.class, Double.class},
+                            argumentNames = {"x", "y", "z"}
+                    )
+            },
+            value = "player.setPos"
+    )
+    public void setPos(Object x, Double y, Double z) {
+        FiguraVec3 vec = LuaUtils.parseVec3("player_setPos", x, y, z);
+        checkEntity();
+        entity.setPos(new Vec3(vec.x, vec.y, vec.z));
+    }
+
+    @LuaWhitelist
+    @LuaMethodDoc(
+            overloads = {
+                    @LuaMethodOverload(
+                            argumentTypes = FiguraVec3.class,
+                            argumentNames = "vec"
+                    ),
+                    @LuaMethodOverload(
+                            argumentTypes = {Double.class, Double.class, Double.class},
+                            argumentNames = {"x", "y", "z"}
+                    )
+            },
+            value = "player.setVelocity"
+    )
+    public void setVelocity(Object x, Double y, Double z) {
+        FiguraVec3 vec = LuaUtils.parseVec3("player_setVelocity", x, y, z);
+        checkEntity();
+        entity.setDeltaMovement(new Vec3(vec.x, vec.y, vec.z));
+    }
+
 
     @LuaWhitelist
     @LuaMethodDoc("player.get_exhaustion")
