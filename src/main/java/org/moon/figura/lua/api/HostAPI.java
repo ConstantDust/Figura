@@ -10,7 +10,9 @@ import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.multiplayer.PlayerInfo;
+import net.minecraft.client.player.Input;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -39,6 +41,7 @@ import org.moon.figura.mixin.LivingEntityAccessor;
 import org.moon.figura.mixin.gui.ChatComponentAccessor;
 import org.moon.figura.mixin.gui.ChatScreenAccessor;
 import org.moon.figura.model.rendering.texture.FiguraTexture;
+import org.moon.figura.overrides.NoInput;
 import org.moon.figura.utils.ColorUtils;
 import org.moon.figura.utils.LuaUtils;
 import org.moon.figura.utils.TextUtils;
@@ -55,6 +58,8 @@ public class HostAPI {
     private final Avatar owner;
     private final boolean isHost;
     private final Minecraft minecraft;
+    private Input defaultInput;
+    private boolean hasPlayerMovement = false;
 
     @LuaWhitelist
     @LuaFieldDoc("host.unlock_cursor")
@@ -63,6 +68,7 @@ public class HostAPI {
 
     public HostAPI(Avatar owner) {
         this.owner = owner;
+        this.defaultInput = null;
         this.minecraft = Minecraft.getInstance();
         this.isHost = owner.isHost;
     }
@@ -613,13 +619,25 @@ public class HostAPI {
     @LuaMethodDoc(
             overloads = {
                     @LuaMethodOverload(
-                            argumentTypes = FiguraVec3.class,
+                            argumentTypes = Boolean.class,
                             argumentNames = "vec"
                     ),
+            },
+            value = "host.set_velocity"
+    )
+    public void setVelocity(Object x, Double y, Double z) {
+        FiguraVec3 vec = LuaUtils.parseVec3("player_setVelocity", x, y, z);
+        LocalPlayer player = this.minecraft.player;
+        if (isHost() && player != null) { player.setDeltaMovement(new Vec3(vec.x, vec.y, vec.z)); }
+    }
+
+    @LuaWhitelist
+    @LuaMethodDoc(
+            overloads = {
                     @LuaMethodOverload(
-                            argumentTypes = {Double.class, Double.class, Double.class},
-                            argumentNames = {"x", "y", "z"}
-                    )
+                            argumentTypes = Boolean.class,
+                            argumentNames = "pos"
+                    ),
             },
             value = "host.set_pos"
     )
@@ -633,21 +651,47 @@ public class HostAPI {
     @LuaMethodDoc(
             overloads = {
                     @LuaMethodOverload(
-                            argumentTypes = FiguraVec3.class,
-                            argumentNames = "vec"
-                    ),
-                    @LuaMethodOverload(
-                            argumentTypes = {Double.class, Double.class, Double.class},
-                            argumentNames = {"x", "y", "z"}
+                            argumentTypes = {Boolean.class},
+                            argumentNames = {"playerMovement"}
                     )
             },
-            value = "host.set_velocity"
+            value = "host.set_player_movement"
     )
-    public void setVelocity(Object x, Double y, Double z) {
-        FiguraVec3 vec = LuaUtils.parseVec3("player_setVelocity", x, y, z);
+    public void setPlayerMovement(Boolean playerMovement) {
         LocalPlayer player = this.minecraft.player;
-        if (isHost() && player != null) { player.setDeltaMovement(new Vec3(vec.x, vec.y, vec.z)); }
+        if (isHost() && player != null) {
+            if (this.defaultInput == null) {
+                this.defaultInput = player.input; // set default input
+            }
+
+            // sets playermovement class
+            if (!playerMovement) {
+                player.input = new NoInput();
+            } else {
+                player.input = this.defaultInput;
+            }
+
+            hasPlayerMovement = playerMovement;
+        }
     }
+
+    @LuaWhitelist
+    @LuaMethodDoc("host.get_player_movement")
+    public Boolean getPlayerMovement() {
+        return hasPlayerMovement;
+    }
+
+    @LuaWhitelist
+    @LuaMethodDoc("host.get_last_death_pos")
+    public FiguraVec3 getLastDeathPos() {
+        LocalPlayer player = this.minecraft.player;
+        if (player != null) {
+            BlockPos deathPos = player.getLastDeathLocation().get().pos();
+            return FiguraVec3.fromBlockPos(deathPos);
+        }
+        return null;
+    }
+
 
     @LuaWhitelist
     @LuaMethodDoc(
@@ -694,15 +738,15 @@ public class HostAPI {
             overloads = {
                     @LuaMethodOverload(
                             argumentTypes = {Double.class},
-                            argumentNames = {"speed"}
+                            argumentNames = {"angle"}
                     )
             },
-            value = "host.set_speed"
+            value = "host.set_body_offset_rot"
     )
-    public void setSpeed(Double speed) {
+    public void setBodyOffsetRot(Double angle) {
         LocalPlayer player = this.minecraft.player;
         if (player != null) {
-            player.setSpeed(speed.floatValue());
+            player.setYBodyRot( angle.floatValue() + player.getYRot() );
         }
     }
 
@@ -711,32 +755,32 @@ public class HostAPI {
             overloads = {
                     @LuaMethodOverload(
                             argumentTypes = {Boolean.class},
-                            argumentNames = {"hasDrag"}
+                            argumentNames = {"hasForce"}
+                    )
+            },
+            value = "host.set_gravity"
+    )
+    public void setGravity(Boolean hasForce) {
+        LocalPlayer player = this.minecraft.player;
+        if (player != null) {
+            player.setNoGravity(!hasForce);
+        }
+    }
+
+    @LuaWhitelist
+    @LuaMethodDoc(
+            overloads = {
+                    @LuaMethodOverload(
+                            argumentTypes = {Boolean.class},
+                            argumentNames = {"hasForce"}
                     )
             },
             value = "host.set_drag"
     )
-    public void setHasDrag(Boolean hasDrag) {
+    public void setDrag(Boolean hasForce) {
         LocalPlayer player = this.minecraft.player;
         if (player != null) {
-            player.setDiscardFriction(!hasDrag);
-        }
-    }
-
-    @LuaWhitelist
-    @LuaMethodDoc(
-            overloads = {
-                    @LuaMethodOverload(
-                            argumentTypes = {Boolean.class},
-                            argumentNames = {"hasGravity"}
-                    )
-            },
-            value = "host.set_has_gravity"
-    )
-    public void setHasGravity(Boolean noGravity) {
-        LocalPlayer player = this.minecraft.player;
-        if (player != null) {
-            player.setNoGravity(noGravity);
+            player.setDiscardFriction(!hasForce);
         }
     }
 

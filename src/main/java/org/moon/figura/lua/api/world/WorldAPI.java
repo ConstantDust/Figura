@@ -7,6 +7,8 @@ import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.arguments.blocks.BlockStateArgument;
 import net.minecraft.commands.arguments.item.ItemArgument;
 import net.minecraft.core.BlockPos;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Marker;
 import net.minecraft.world.entity.player.Player;
@@ -17,6 +19,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.synth.PerlinSimplexNoise;
+import net.minecraft.world.level.levelgen.synth.SimplexNoise;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
@@ -33,6 +37,8 @@ import org.moon.figura.lua.api.entity.PlayerAPI;
 import org.moon.figura.lua.docs.LuaMethodDoc;
 import org.moon.figura.lua.docs.LuaMethodOverload;
 import org.moon.figura.lua.docs.LuaTypeDoc;
+import org.moon.figura.math.NoiseGenerator;
+import org.moon.figura.math.vector.FiguraVec2;
 import org.moon.figura.math.vector.FiguraVec3;
 import org.moon.figura.utils.EntityUtils;
 import org.moon.figura.utils.LuaUtils;
@@ -354,6 +360,32 @@ public class WorldAPI {
 
     @LuaWhitelist
     @LuaMethodDoc(
+            overloads = {
+                    @LuaMethodOverload(
+                            argumentTypes = {Integer.class, FiguraVec3.class},
+                            argumentNames = {"half_range", "pos"}
+                    ),
+                    @LuaMethodOverload(
+                            argumentTypes = {Integer.class, Double.class, Double.class, Double.class},
+                            argumentNames = {"half_range", "x", "y", "z"}
+                    )
+            },
+            value = "world.get_nearby_entities"
+    )
+    public static Map<String, EntityAPI<?>> getNearbyEntities(Integer range, Object x, Double y, Double z) {
+        FiguraVec3 pos = LuaUtils.parseVec3("getNearbyEntities", x, y, z);
+        HashMap<String, EntityAPI<?>> entityList = new HashMap<>();
+
+        AABB area = new AABB(pos.asVec3().subtract(range, range, range), pos.asVec3().add(range, range, range));
+        for (Entity entity : getCurrentWorld().getEntitiesOfClass(Entity.class, area)) {
+            entityList.put(entity.getName().getString(), EntityAPI.wrap(entity));
+            System.out.println(entity.getName().getString());
+        }
+        return entityList;
+    }
+
+    @LuaWhitelist
+    @LuaMethodDoc(
             overloads = @LuaMethodOverload(
                     argumentTypes = String.class,
                     argumentNames = "UUID"
@@ -368,11 +400,32 @@ public class WorldAPI {
         }
     }
 
-    //@LuaWhitelist
-    public HashMap<String, Object> raycastBlock(boolean fluid, Object x, Object y, Double z, Object w, Double t, Double h) {
+    @LuaWhitelist
+    @LuaMethodDoc(
+            overloads = {
+                    @LuaMethodOverload(
+                            argumentTypes = {Boolean.class, FiguraVec3.class, FiguraVec3.class},
+                            argumentNames = {"ignoreLiquids", "start", "end"}
+                    ),
+                    @LuaMethodOverload(
+                            argumentTypes = {Boolean.class, FiguraVec3.class, Double.class, Double.class, Double.class},
+                            argumentNames = {"ignoreLiquids", "start", "w", "t", "h"}
+                    ),
+                    @LuaMethodOverload(
+                            argumentTypes = {Boolean.class, Double.class, Double.class, Double.class, FiguraVec3.class},
+                            argumentNames = {"ignoreLiquids", "x", "y", "z", "end"}
+                    ),
+                    @LuaMethodOverload(
+                            argumentTypes = {Boolean.class, Double.class, Double.class, Double.class, Double.class, Double.class, Double.class},
+                            argumentNames = {"ignoreLiquids", "x", "y", "z", "w", "t", "h"}
+                    )
+            },
+            value = "world.linetraceBlock"
+    )
+    public HashMap<String, Object> linetraceBlock(boolean fluid, Object x, Object y, Double z, Object w, Double t, Double h) {
         FiguraVec3 start, end;
 
-        Pair<FiguraVec3, FiguraVec3> pair = LuaUtils.parse2Vec3("raycastBlock", x, y, z, w, t, h);
+        Pair<FiguraVec3, FiguraVec3> pair = LuaUtils.parse2Vec3("linetraceBlock", x, y, z, w, t, h);
         start = pair.getFirst();
         end = pair.getSecond();
 
@@ -382,22 +435,43 @@ public class WorldAPI {
 
         HashMap<String, Object> map = new HashMap<>();
         BlockPos pos = result.getBlockPos();
-        map.put("block", getBlockState(pos.getX(), (double) pos.getY(), (double) pos.getZ()));
         map.put("direction", result.getDirection().getName());
-        map.put("pos", FiguraVec3.fromVec3(result.getLocation()));
+        map.put("position", FiguraVec3.fromVec3(result.getLocation()));
+        map.put("block", getBlockState(pos.getX(), (double) pos.getY(), (double) pos.getZ()));
 
         return map;
     }
 
-    //@LuaWhitelist
-    public HashMap<String, Object> raycastEntity(Object x, Object y, Double z, Object w, Double t, Double h) {
+    @LuaWhitelist
+    @LuaMethodDoc(
+            overloads = {
+                    @LuaMethodOverload(
+                            argumentTypes = {FiguraVec3.class, FiguraVec3.class},
+                            argumentNames = {"start", "end"}
+                    ),
+                    @LuaMethodOverload(
+                            argumentTypes = {FiguraVec3.class, Double.class, Double.class, Double.class},
+                            argumentNames = {"start", "w", "t", "h"}
+                    ),
+                    @LuaMethodOverload(
+                            argumentTypes = {Double.class, Double.class, Double.class, FiguraVec3.class},
+                            argumentNames = {"x", "y", "z", "end"}
+                    ),
+                    @LuaMethodOverload(
+                            argumentTypes = {Double.class, Double.class, Double.class, Double.class, Double.class, Double.class},
+                            argumentNames = {"x", "y", "z", "w", "t", "h"}
+                    )
+            },
+            value = "world.linetraceEntity"
+    )
+    public HashMap<String, Object> linetraceEntity(Object x, Object y, Double z, Object w, Double t, Double h) {
         FiguraVec3 start, end;
 
-        Pair<FiguraVec3, FiguraVec3> pair = LuaUtils.parse2Vec3("raycastEntity", x, y, z, w, t, h);
+        Pair<FiguraVec3, FiguraVec3> pair = LuaUtils.parse2Vec3("linetraceEntity", x, y, z, w, t, h);
         start = pair.getFirst();
         end = pair.getSecond();
 
-        EntityHitResult result = ProjectileUtil.getEntityHitResult(new Marker(EntityType.MARKER, getCurrentWorld()), start.asVec3(), end.asVec3(), new AABB(start.asVec3(), end.asVec3()), entity -> true, Double.MAX_VALUE);
+        EntityHitResult result = ProjectileUtil.getEntityHitResult(Minecraft.getInstance().player != null ? Minecraft.getInstance().player : new Marker(EntityType.MARKER, getCurrentWorld()), start.asVec3(), end.asVec3(), new AABB(start.asVec3(), end.asVec3()), entity -> true, Double.MAX_VALUE);
 
         if (result == null)
             return null;
@@ -448,6 +522,56 @@ public class WorldAPI {
             throw new LuaError("Could not parse block state from string: " + string);
         }
     }
+
+    @LuaWhitelist
+    @LuaMethodDoc(
+            overloads = {
+                    @LuaMethodOverload(
+                            argumentTypes = {BlockStateAPI.class, FiguraVec3.class},
+                            argumentNames = {"block", "pos"}
+                    ),
+                    @LuaMethodOverload(
+                            argumentTypes = {BlockStateAPI.class, Double.class, Double.class, Double.class},
+                            argumentNames = {"block", "x", "y", "z"}
+                    )
+            },
+            value = "world.set_block"
+    )
+    public static Boolean setBlock(@LuaNotNil String string, Object x, Double y, Double z) {
+        BlockPos pos = LuaUtils.parseVec3("setBlock", x, y, z).asBlockPos();
+        try {
+            Level level = getCurrentWorld();
+            BlockState block = BlockStateArgument.block(CommandBuildContext.simple(level.registryAccess(), level.enabledFeatures())).parse(new StringReader(string)).getState();
+
+            level.setBlockAndUpdate(pos,block);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    @LuaWhitelist
+    @LuaMethodDoc(
+            overloads = {
+                    @LuaMethodOverload(
+                            argumentTypes = {Long.class, FiguraVec3.class, Boolean.class},
+                            argumentNames = {"seed", "pos", "isSmooth"}
+                    ),
+                    @LuaMethodOverload(
+                            argumentTypes = {Long.class, Double.class, Double.class, Double.class, Boolean.class},
+                            argumentNames = {"seed", "xPos", "yPos", "zPos", "isSmooth"}
+                    ),
+            },
+            value = "world.get_noise"
+    )
+    public static Double getNoise(Long seed, Object x, Double y, Double z, Boolean isSmooth) {
+        FiguraVec3 pos = LuaUtils.parseVec3("getNoise", x, y, z);
+        NoiseGenerator noise = new NoiseGenerator();
+        noise.setSeed(seed);
+        if (isSmooth) return noise.smoothNoise(pos.x, pos.y, pos.z);
+        else { return noise.noise(pos.x,pos.y,pos.z); }
+    }
+
 
     @LuaWhitelist
     @LuaMethodDoc(

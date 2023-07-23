@@ -44,7 +44,7 @@ public class FiguraMod implements ClientModInitializer {
     public static final String MOD_NAME = "Figura";
     public static final ModMetadata METADATA = FabricLoader.getInstance().getModContainer(MOD_ID).get().getMetadata();
     public static final Version VERSION = new Version(METADATA.getVersion().getFriendlyString());
-    public static final boolean DEBUG_MODE = Math.random() + 1 < 0;
+    public static final boolean DEBUG_MODE = true;
     public static final Calendar CALENDAR = Calendar.getInstance();
     public static final Path GAME_DIR = FabricLoader.getInstance().getGameDir().normalize();
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_NAME);

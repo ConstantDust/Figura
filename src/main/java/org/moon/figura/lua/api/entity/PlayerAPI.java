@@ -1,7 +1,9 @@
 package org.moon.figura.lua.api.entity;
 
 import net.minecraft.client.multiplayer.PlayerInfo;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.resources.DefaultPlayerSkin;
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.player.PlayerModelPart;
 import net.minecraft.world.level.GameType;
@@ -78,6 +80,13 @@ public class PlayerAPI extends LivingEntityAPI<Player> {
     }
 
     @LuaWhitelist
+    @LuaMethodDoc("player.get_last_death_pos")
+    public FiguraVec3 getLastDeathPos() {
+        BlockPos deathPos = entity.getLastDeathLocation().get().pos();
+        return FiguraVec3.fromBlockPos(deathPos);
+    }
+
+    @LuaWhitelist
     @LuaMethodDoc("player.get_experience_level")
     public int getExperienceLevel() {
         checkEntity();
@@ -140,6 +149,12 @@ public class PlayerAPI extends LivingEntityAPI<Player> {
     public boolean isFishing() {
         checkEntity();
         return entity.fishing != null;
+    }
+
+    @LuaWhitelist
+    @LuaMethodDoc("player.is_flying")
+    public boolean isFlying() {
+        return entity.getAbilities().flying;
     }
 
     @LuaWhitelist

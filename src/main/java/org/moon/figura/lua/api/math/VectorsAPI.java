@@ -1,6 +1,7 @@
 package org.moon.figura.lua.api.math;
 
 import com.mojang.datafixers.util.Pair;
+import net.minecraft.world.phys.Vec3;
 import org.luaj.vm2.LuaError;
 import org.moon.figura.lua.LuaNotNil;
 import org.moon.figura.lua.LuaWhitelist;
@@ -10,6 +11,7 @@ import org.moon.figura.lua.docs.LuaTypeDoc;
 import org.moon.figura.math.vector.FiguraVec2;
 import org.moon.figura.math.vector.FiguraVec3;
 import org.moon.figura.math.vector.FiguraVec4;
+import org.moon.figura.model.FiguraModelPart;
 import org.moon.figura.utils.ColorUtils;
 import org.moon.figura.utils.LuaUtils;
 import org.moon.figura.utils.MathUtils;
@@ -273,6 +275,29 @@ public class VectorsAPI {
         double radYaw = Math.toRadians(-vec.y);
         double cos = Math.cos(radPitch);
         return FiguraVec3.of(Math.sin(radYaw) * cos, -Math.sin(radPitch), Math.cos(radYaw) * cos);
+    }
+
+    @LuaWhitelist
+    @LuaMethodDoc(
+            overloads = {
+                    @LuaMethodOverload(
+                            argumentTypes = FiguraVec3.class,
+                            argumentNames = "pos"
+                    ),
+                    @LuaMethodOverload(
+                            argumentTypes = {Double.class, Double.class, Double.class},
+                            argumentNames = {"x", "y", "z"}
+                    )
+            },
+            value = "vectors.dir_to_angle"
+    )
+    public FiguraVec3 dirToAngle(Object x, Double y, Double z) {
+        FiguraVec3 end = LuaUtils.parseVec3("pointAt", x, y, z);
+        Vec3 dir = end.asVec3().normalize();
+        double yaw = Math.atan2(dir.x, dir.z);
+        double pitch = Math.asin(dir.y);
+        Vec3 rot = new Vec3(Math.toDegrees(pitch), Math.toDegrees(yaw), 0);
+        return FiguraVec3.fromVec3(rot);
     }
 
     @Override

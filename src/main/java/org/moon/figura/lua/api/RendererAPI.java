@@ -162,6 +162,24 @@ public class RendererAPI {
     }
 
     @LuaWhitelist
+    @LuaMethodDoc(
+            overloads = @LuaMethodOverload(
+                    argumentTypes = Boolean.class,
+                    argumentNames = "smoothCamera"
+            ),
+            value = "renderer.set_smooth_camera")
+    public RendererAPI setSmoothCamera(boolean smoothCamera) {
+        Minecraft.getInstance().options.smoothCamera = smoothCamera;
+        return this;
+    }
+
+    @LuaWhitelist
+    @LuaMethodDoc("renderer.get_smooth_camera")
+    public boolean getSmoothCamera() {
+        return Minecraft.getInstance().options.smoothCamera;
+    }
+
+    @LuaWhitelist
     @LuaMethodDoc("renderer.is_upside_down")
     public boolean isUpsideDown() {
         return upsideDown;
@@ -212,10 +230,15 @@ public class RendererAPI {
         Minecraft.getInstance().options.sensitivity().set(Mth.clamp(sensitivity.doubleValue(), 0D, 1D));
         return this;
     }
+
     @LuaWhitelist
+    @LuaMethodDoc(
+            value = "renderer.get_sensitivity"
+    )
     public Double getSensitivity() {
         return Minecraft.getInstance().options.sensitivity().get();
     }
+
     @LuaWhitelist
     public RendererAPI shadowRadius(Float shadowRadius) {
         return setShadowRadius(shadowRadius);
@@ -244,6 +267,10 @@ public class RendererAPI {
     public FiguraVec3 getCameraPos() {
         return this.cameraPos;
     }
+
+    @LuaWhitelist
+    @LuaMethodDoc("renderer.get_delta_time")
+    public Float getDeltaTime() { return Minecraft.getInstance().getDeltaFrameTime(); }
 
     @LuaWhitelist
     @LuaMethodDoc(

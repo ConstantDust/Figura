@@ -1,5 +1,5 @@
 {
-  "figura": "Figura",
+  "figura": "Figura - Extura",
   "figura.tab": "  ",
   "figura.ellipsis": "...",
 
@@ -270,7 +270,7 @@
   "figura.gui.status.script": "Script",
   "figura.gui.status.script.0": "none",
   "figura.gui.status.script.1": "This Avatar script contains an error",
-  "figura.gui.status.script.2": "This Avatar script targets a newer version of Figura",
+  "figura.gui.status.script.2": "This Avatar script targets a newer version of Figura or Extura",
   "figura.gui.status.script.3": "ok",
 
   "figura.gui.status.backend": "Cloud",
@@ -311,7 +311,7 @@
   "figura.gui.help.lua_manual": "Lua Manual",
   "figura.gui.help.external_wiki": "Online Wiki",
   "figura.gui.help.lua_version": "Lua Version: %s",
-  "figura.gui.help.figura_version": "Figura Version: %s",
+  "figura.gui.help.figura_version": "Figura (Extura) Version: %s",
   "figura.gui.help.credits": "Made with love ❤ - by %s",
 
 
@@ -1155,6 +1155,7 @@
   "figura.docs.host.get_air": "Gets the remaining amount of air of the player",
   "figura.docs.host.get_pick_block": "Returns the current targeted block set by the client\nReturns a vararg of the block, the hit position and the block face the hit collided",
   "figura.docs.host.get_pick_entity": "Returns the current targeted entity set by the client",
+  "figura.docs.host.set_natural_forces": "Sets if the player is effected by gravity and drag",
 
 
   "figura.docs.itemstack": "A proxy for an item stack from Minecraft",
@@ -1758,5 +1759,8 @@
   "figura.docs.world.new_item": "Parses and create a new ItemStack from the given string\nA count and damage can be given, to be applied on this itemstack",
   "figura.docs.world.exists": "Checks whether or not a world currently exists\nThis will almost always be true, but might be false on some occasions such as while travelling between dimensions",
   "figura.docs.world.get_build_height": "Returns the minimum and maximum build height of the world, as varargs",
-  "figura.docs.world.get_spawn_point": "Returns a vector with the coordinates of the world spawn"
+  "figura.docs.world.get_spawn_point": "Returns a vector with the coordinates of the world spawn",
+  "figura.docs.world.get_nearby_entities": "Returns any nearby entities",
+  "figura.docs.world.linetraceBlock": "Returns the block, side, and pos of a linetrace",
+  "figura.docs.world.linetraceEntity": "Returns the entity and pos of a linetrace"
 }
