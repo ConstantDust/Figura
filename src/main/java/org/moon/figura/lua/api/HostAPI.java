@@ -676,6 +676,25 @@ public class HostAPI {
     }
 
     @LuaWhitelist
+    @LuaMethodDoc(
+            overloads = {
+                    @LuaMethodOverload(
+                            argumentTypes = {Boolean.class},
+                            argumentNames = {"isMainHand"}
+                    )
+            },
+            value = "host.start_using_item"
+    )
+    public void startUsingItem(Boolean isMainHand) {
+        LocalPlayer player = this.minecraft.player;
+        if (player != null) {
+            player.startUsingItem(isMainHand ? InteractionHand.MAIN_HAND : InteractionHand.OFF_HAND);
+        }
+    }
+
+    //host:startUsingItem(false)
+
+    @LuaWhitelist
     @LuaMethodDoc("host.get_player_movement")
     public Boolean getPlayerMovement() {
         return hasPlayerMovement;

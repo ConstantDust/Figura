@@ -3,6 +3,7 @@ package org.moon.figura.lua.api.world;
 import com.mojang.brigadier.StringReader;
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.arguments.blocks.BlockStateArgument;
 import net.minecraft.commands.arguments.item.ItemArgument;
@@ -19,6 +20,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.GeodeLayerSettings;
 import net.minecraft.world.level.levelgen.synth.PerlinSimplexNoise;
 import net.minecraft.world.level.levelgen.synth.SimplexNoise;
 import net.minecraft.world.phys.AABB;
@@ -537,13 +539,19 @@ public class WorldAPI {
             },
             value = "world.set_block"
     )
-    public static Boolean setBlock(@LuaNotNil String string, Object x, Double y, Double z) {
+    public static Boolean setBlock(BlockStateAPI state, Object x, Double y, Double z) {
         BlockPos pos = LuaUtils.parseVec3("setBlock", x, y, z).asBlockPos();
         try {
-            Level level = getCurrentWorld();
-            BlockState block = BlockStateArgument.block(CommandBuildContext.simple(level.registryAccess(), level.enabledFeatures())).parse(new StringReader(string)).getState();
+            ClientLevel level = (ClientLevel) getCurrentWorld();
+            BlockState blockState = state.blockState;
+            Player p = Minecraft.getInstance().player;
 
-            level.setBlockAndUpdate(pos,block);
+            if (p != null) {
+                level.setBlock(pos, blockState, 5, 512);
+                level.syncBlockState(pos, blockState, p.getPosition(0));
+            } else {
+                return false;
+            }
             return true;
         } catch (Exception e) {
             return false;
